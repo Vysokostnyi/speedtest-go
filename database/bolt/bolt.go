@@ -44,12 +44,18 @@ func (p *Bolt) FetchByUUID(uuid string) (*schema.TelemetryData, error) {
 	err := p.db.View(func(tx *bbolt.Tx) error {
 		bucket := tx.Bucket([]byte(bucketName))
 		if bucket == nil {
-			return errors.New("data bucket doesn't exist yet")
+			return errors.New("record not found")
 		}
 		b := bucket.Get([]byte(uuid))
+		if b == nil {
+			return errors.New("record not found")
+		}
 		return json.Unmarshal(b, &record)
 	})
-	return &record, err
+	if err != nil {
+		return nil, err
+	}
+	return &record, nil
 }
 
 func (p *Bolt) FetchLast100() ([]schema.TelemetryData, error) {
@@ -58,7 +64,7 @@ func (p *Bolt) FetchLast100() ([]schema.TelemetryData, error) {
 		var record schema.TelemetryData
 		bucket := tx.Bucket([]byte(bucketName))
 		if bucket == nil {
-			return errors.New("data bucket doesn't exist yet")
+			return nil
 		}
 
 		cursor := bucket.Cursor()

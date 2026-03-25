@@ -3,6 +3,7 @@ package results
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -21,13 +22,12 @@ import (
 
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
-	"github.com/oklog/ulid/v2"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/image/font"
 )
 
 const (
-	watermark = "LibreSpeed"
+	watermark = "flow-access.online"
 
 	labelMS       = " ms"
 	labelMbps     = "Mbit/s"
@@ -57,15 +57,15 @@ var (
 	middleOffset              = topOffset + 5
 	bottomOffset              = middleOffset - 10
 	ispOffset                 = bottomOffset + 8
-	colorLabel                = image.NewUniform(color.RGBA{40, 40, 40, 255})
-	colorDownload             = image.NewUniform(color.RGBA{96, 96, 170, 255})
-	colorUpload               = image.NewUniform(color.RGBA{96, 96, 96, 255})
-	colorPing                 = image.NewUniform(color.RGBA{170, 96, 96, 255})
-	colorJitter               = image.NewUniform(color.RGBA{170, 96, 96, 255})
-	colorMeasure              = image.NewUniform(color.RGBA{40, 40, 40, 255})
-	colorISP                  = image.NewUniform(color.RGBA{40, 40, 40, 255})
-	colorWatermark            = image.NewUniform(color.RGBA{160, 160, 160, 255})
-	colorSeparator            = image.NewUniform(color.RGBA{192, 192, 192, 255})
+	colorLabel      = image.NewUniform(color.RGBA{248, 250, 252, 255}) // var(--text)
+	colorDownload   = image.NewUniform(color.RGBA{34, 211, 238, 255})  // #22d3ee
+	colorUpload     = image.NewUniform(color.RGBA{129, 140, 248, 255}) // #818cf8
+	colorPing       = image.NewUniform(color.RGBA{252, 163, 17, 255})  // #fca311
+	colorJitter     = image.NewUniform(color.RGBA{252, 163, 17, 255})  // #fca311
+	colorMeasure    = image.NewUniform(color.RGBA{148, 163, 184, 255}) // var(--text-muted)
+	colorISP        = image.NewUniform(color.RGBA{148, 163, 184, 255}) // var(--text-muted)
+	colorWatermark  = image.NewUniform(color.RGBA{100, 116, 139, 255})
+	colorSeparator  = image.NewUniform(color.RGBA{51, 65, 85, 255})
 )
 
 type Result struct {
@@ -189,10 +189,9 @@ func Record(w http.ResponseWriter, r *http.Request) {
 	record.Jitter = jitter
 	record.Log = logs
 
-	t := time.Now()
-	entropy := ulid.Monotonic(rand.New(rand.NewSource(t.UnixNano())), 0)
-	uuid := ulid.MustNew(ulid.Timestamp(t), entropy)
-	record.UUID = uuid.String()
+	// Generate numeric ID: Unix Timestamp (10 digits) + 2 random digits
+	id := fmt.Sprintf("%d%02d", time.Now().Unix(), rand.Intn(100))
+	record.UUID = id
 
 	err := database.DB.Insert(&record)
 	if err != nil {
@@ -201,7 +200,7 @@ func Record(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := w.Write([]byte("id " + uuid.String())); err != nil {
+	if _, err := w.Write([]byte("id " + id)); err != nil {
 		log.Errorf("Error writing ID to telemetry request: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
@@ -237,7 +236,7 @@ func DrawPNG(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	draw.Draw(canvas, canvas.Bounds(), image.NewUniform(color.White), image.Point{}, draw.Src)
+	draw.Draw(canvas, canvas.Bounds(), image.NewUniform(color.RGBA{15, 23, 42, 255}), image.Point{}, draw.Src) // var(--bg) #0f172a
 
 	drawer := &font.Drawer{
 		Dst:  canvas,

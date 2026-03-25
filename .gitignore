@@ -131,6 +131,7 @@ Temporary Items
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+settings.toml
 speedtest.db
 .idea/
 speedtest-backend

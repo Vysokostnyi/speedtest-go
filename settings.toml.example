@@ -1,0 +1,40 @@
+# Адрес привязки, оставьте пустым для прослушивания всех интерфейсов
+bind_address=""
+# Порт прослушивания бэкенда
+listen_port=8989
+# Изменить базовый URL (например, "/librespeed")
+# url_base="/librespeed"
+# Порт PROXY протокола, используйте 0 для отключения
+proxyprotocol_port=0
+# Местоположение сервера (широта и долгота)
+server_lat=1
+server_lng=1
+# API ключ ipinfo.io (если используется для определения провайдера)
+ipinfo_api_key="ВАШ_API_КЛЮЧ"
+
+# Путь к папке со статикой, по умолчанию папка `assets` в той же директории
+assets_path=""
+
+# Пароль для входа на страницу статистики
+statistics_password="ВАШ_ПАРОЛЬ"
+# Скрывать (маскировать) IP-адреса в статистике
+redact_ip_addresses=false
+
+# Тип базы данных для статистики: none, memory, bolt, mysql, postgresql
+# Если выбрано none, статистика не будет записываться и картинки результатов не будут генерироваться
+database_type="bolt"
+database_hostname=""
+database_name=""
+database_username=""
+database_password=""
+
+# Если используется `bolt`, укажите здесь путь к файлу базы данных
+database_file="speedtest.db"
+
+# Настройки TLS и HTTP/2. TLS обязателен для работы HTTP/2
+enable_tls=false
+enable_http2=false
+
+# Если вы используете HTTP/2 или TLS, укажите пути к сертификату и ключу
+# tls_cert_file="cert.pem"
+# tls_key_file="privkey.pem"

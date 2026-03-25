@@ -1,0 +1,10 @@
+services:
+  speedtest:
+    build: .
+    container_name: librespeed-go
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./settings.toml:/app/settings.toml
+      - ./speedtest.db:/app/speedtest.db
+    restart: unless-stopped

@@ -1,365 +1,401 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=no" />
-<meta charset="UTF-8" />
-<link rel="shortcut icon" href="favicon.ico">
-<script type="text/javascript" src="speedtest.js"></script>
-<script type="text/javascript">
-function I(i){return document.getElementById(i);}
-//INITIALIZE SPEEDTEST
-var s=new Speedtest(); //create speedtest object
-s.setParameter("telemetry_level","basic"); //enable telemetry
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no, user-scalable=no">
+    <title>Flow Access | Speedtest</title>
+    <link rel="shortcut icon" href="favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script type="text/javascript" src="speedtest.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.5);
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --dl-color: #22d3ee;
+            --ul-color: #818cf8;
+        }
 
-var meterBk=/Trident.*rv:(\d+\.\d+)/i.test(navigator.userAgent)?"#EAEAEA":"#80808040";
-var dlColor="#6060AA",
-	ulColor="#616161";
-var progColor=meterBk;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
 
-//CODE FOR GAUGES
-function drawMeter(c,amount,bk,fg,progress,prog){
-	var ctx=c.getContext("2d");
-	var dp=window.devicePixelRatio||1;
-	var cw=c.clientWidth*dp, ch=c.clientHeight*dp;
-	var sizScale=ch*0.0055;
-	if(c.width==cw&&c.height==ch){
-		ctx.clearRect(0,0,cw,ch);
-	}else{
-		c.width=cw;
-		c.height=ch;
-	}
-	ctx.beginPath();
-	ctx.strokeStyle=bk;
-	ctx.lineWidth=12*sizScale;
-	ctx.arc(c.width/2,c.height-58*sizScale,c.height/1.8-ctx.lineWidth,-Math.PI*1.1,Math.PI*0.1);
-	ctx.stroke();
-	ctx.beginPath();
-	ctx.strokeStyle=fg;
-	ctx.lineWidth=12*sizScale;
-	ctx.arc(c.width/2,c.height-58*sizScale,c.height/1.8-ctx.lineWidth,-Math.PI*1.1,amount*Math.PI*1.2-Math.PI*1.1);
-	ctx.stroke();
-	if(typeof progress !== "undefined"){
-		ctx.fillStyle=prog;
-		ctx.fillRect(c.width*0.3,c.height-16*sizScale,c.width*0.4*progress,4*sizScale);
-	}
-}
-function mbpsToAmount(s){
-	return 1-(1/(Math.pow(1.3,Math.sqrt(s))));
-}
-function format(d){
-    d=Number(d);
-    if(d<10) return d.toFixed(2);
-    if(d<100) return d.toFixed(1);
-    return d.toFixed(0);
-}
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
 
-//UI CODE
-var uiData=null;
-function startStop(){
-    if(s.getState()==3){
-		//speedtest is running, abort
-		s.abort();
-		data=null;
-		I("startStopBtn").className="";
-		initUI();
-	}else{
-		//test is not running, begin
-		I("startStopBtn").className="running";
-		I("shareArea").style.display="none";
-		s.onupdate=function(data){
-            uiData=data;
-		};
-		s.onend=function(aborted){
-            I("startStopBtn").className="";
-            updateUI(true);
-            if(!aborted){
-                //if testId is present, show sharing panel, otherwise do nothing
-                try{
-                    var testId=uiData.testId;
-                    if(testId!=null){
-                        var shareURL=window.location.href.substring(0,window.location.href.lastIndexOf("/"))+"/results/?id="+testId;
-                        I("resultsImg").src=shareURL;
-                        I("resultsURL").value=shareURL;
-                        I("testId").innerHTML=testId;
-                        I("shareArea").style.display="";
-                    }
-                }catch(e){}
-            }
-		};
-		s.start();
-	}
-}
-//this function reads the data sent back by the test and updates the UI
-function updateUI(forced){
-	if(!forced&&s.getState()!=3) return;
-	if(uiData==null) return;
-	var status=uiData.testState;
-	I("ip").textContent=uiData.clientIp;
-	I("dlText").textContent=(status==1&&uiData.dlStatus==0)?"...":format(uiData.dlStatus);
-	drawMeter(I("dlMeter"),mbpsToAmount(Number(uiData.dlStatus*(status==1?oscillate():1))),meterBk,dlColor,Number(uiData.dlProgress),progColor);
-	I("ulText").textContent=(status==3&&uiData.ulStatus==0)?"...":format(uiData.ulStatus);
-	drawMeter(I("ulMeter"),mbpsToAmount(Number(uiData.ulStatus*(status==3?oscillate():1))),meterBk,ulColor,Number(uiData.ulProgress),progColor);
-	I("pingText").textContent=format(uiData.pingStatus);
-	I("jitText").textContent=format(uiData.jitterStatus);
-}
-function oscillate(){
-	return 1+0.02*Math.sin(Date.now()/100);
-}
-//update the UI every frame
-window.requestAnimationFrame=window.requestAnimationFrame||window.webkitRequestAnimationFrame||window.mozRequestAnimationFrame||window.msRequestAnimationFrame||(function(callback,element){setTimeout(callback,1000/60);});
-function frame(){
-	requestAnimationFrame(frame);
-	updateUI();
-}
-frame(); //start frame loop
-//function to (re)initialize UI
-function initUI(){
-	drawMeter(I("dlMeter"),0,meterBk,dlColor,0);
-	drawMeter(I("ulMeter"),0,meterBk,ulColor,0);
-	I("dlText").textContent="";
-	I("ulText").textContent="";
-	I("pingText").textContent="";
-	I("jitText").textContent="";
-	I("ip").textContent="";
-}
-</script>
-<style type="text/css">
-	html,body{
-		border:none; padding:0; margin:0;
-		background:#FFFFFF;
-		color:#202020;
-	}
-	body{
-		text-align:center;
-		font-family:"Roboto",sans-serif;
-	}
-	h1{
-		color:#404040;
-	}
-	#startStopBtn{
-		display:inline-block;
-		margin:0 auto;
-		color:#6060AA;
-		background-color:rgba(0,0,0,0);
-		border:0.15em solid #6060FF;
-		border-radius:0.3em;
-		transition:all 0.3s;
-		box-sizing:border-box;
-		width:8em; height:3em;
-		line-height:2.7em;
-		cursor:pointer;
-		box-shadow: 0 0 0 rgba(0,0,0,0.1), inset 0 0 0 rgba(0,0,0,0.1);
-	}
-	#startStopBtn:hover{
-		box-shadow: 0 0 2em rgba(0,0,0,0.1), inset 0 0 1em rgba(0,0,0,0.1);
-	}
-	#startStopBtn.running{
-		background-color:#FF3030;
-		border-color:#FF6060;
-		color:#FFFFFF;
-	}
-	#startStopBtn:before{
-		content:"Start";
-	}
-	#startStopBtn.running:before{
-		content:"Abort";
-	}
-	#test{
-		margin-top:2em;
-		margin-bottom:12em;
-	}
-	div.testArea{
-		display:inline-block;
-		width:16em;
-		height:12.5em;
-		position:relative;
-		box-sizing:border-box;
-	}
-	div.testArea2{
-		display:inline-block;
-		width:14em;
-		height:7em;
-		position:relative;
-		box-sizing:border-box;
-		text-align:center;
-	}
-	div.testArea div.testName{
-		position:absolute;
-		top:0.1em; left:0;
-		width:100%;
-		font-size:1.4em;
-		z-index:9;
-	}
-	div.testArea2 div.testName{
-        display:block;
-        text-align:center;
-        font-size:1.4em;
-	}
-	div.testArea div.meterText{
-		position:absolute;
-		bottom:1.55em; left:0;
-		width:100%;
-		font-size:2.5em;
-		z-index:9;
-	}
-	div.testArea2 div.meterText{
-        display:inline-block;
-        font-size:2.5em;
-	}
-	div.meterText:empty:before{
-		content:"0.00";
-	}
-	div.testArea div.unit{
-		position:absolute;
-		bottom:2em; left:0;
-		width:100%;
-		z-index:9;
-	}
-	div.testArea2 div.unit{
-		display:inline-block;
-	}
-	div.testArea canvas{
-		position:absolute;
-		top:0; left:0; width:100%; height:100%;
-		z-index:1;
-	}
-	div.testGroup{
-		display:block;
-        margin: 0 auto;
-	}
-	#shareArea{
-		width:95%;
-		max-width:40em;
-		margin:0 auto;
-		margin-top:2em;
-	}
-	#shareArea > *{
-		display:block;
-		width:100%;
-		height:auto;
-		margin: 0.25em 0;
-	}
-	#privacyPolicy{
-        position:fixed;
-        top:2em;
-        bottom:2em;
-        left:2em;
-        right:2em;
-        overflow-y:auto;
-        width:auto;
-        height:auto;
-        box-shadow:0 0 3em 1em #000000;
-        z-index:999999;
-        text-align:left;
-        background-color:#FFFFFF;
-        padding:1em;
-	}
-	a.privacy{
-        text-align:center;
-        font-size:0.8em;
-        color:#808080;
-        padding: 0 3em;
-    }
-    div.closePrivacyPolicy {
-        width: 100%;
-        text-align: center;
-    }
-    div.closePrivacyPolicy a.privacy {
-        padding: 1em 3em;
-    }
-	@media all and (max-width:40em){
-		body{
-			font-size:0.8em;
-		}
-	}
-</style>
-<title>LibreSpeed Example</title>
+        .container {
+            width: 100%;
+            max-width: 900px;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 600;
+            background: linear-gradient(to right, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .stat-unit {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .main-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        #startStopBtn {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 0 20px var(--primary-glow);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #startStopBtn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--primary-glow);
+        }
+
+        #startStopBtn.running {
+            background: #ef4444;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .info-bar {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 99px;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        #ip { color: var(--text); font-weight: 600; }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 15px;
+            overflow: hidden;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #shareArea {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        #resultsURL {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            color: var(--text);
+            padding: 10px 15px;
+            border-radius: 8px;
+            width: 100%;
+            margin-top: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        footer a { color: var(--primary); text-decoration: none; }
+
+        /* Mobile optimization */
+        @media (max-width: 640px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .stat-value { font-size: 1.75rem; }
+            h1 { font-size: 1.75rem; }
+            .glass-card { padding: 25px; }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, var(--primary), #a855f7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 99px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            opacity: 0;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-<h1>LibreSpeed Example</h1>
-<div id="testWrapper">
-	<div id="startStopBtn" onclick="startStop()"></div><br/>
-	<a class="privacy" href="#" onclick="I('privacyPolicy').style.display=''">Privacy</a>
-	<div id="test">
-		<div class="testGroup">
-			<div class="testArea2">
-				<div class="testName">Ping</div>
-				<div id="pingText" class="meterText" style="color:#AA6060"></div>
-				<div class="unit">ms</div>
-			</div>
-			<div class="testArea2">
-				<div class="testName">Jitter</div>
-				<div id="jitText" class="meterText" style="color:#AA6060"></div>
-				<div class="unit">ms</div>
-			</div>
-		</div>
-		<div class="testGroup">
-			<div class="testArea">
-				<div class="testName">Download</div>
-				<canvas id="dlMeter" class="meter"></canvas>
-				<div id="dlText" class="meterText"></div>
-				<div class="unit">Mbps</div>
-			</div>
-			<div class="testArea">
-				<div class="testName">Upload</div>
-				<canvas id="ulMeter" class="meter"></canvas>
-				<div id="ulText" class="meterText"></div>
-				<div class="unit">Mbps</div>
-			</div>
-		</div>
-		<div id="ipArea">
-			<span id="ip"></span>
-		</div>
-		<div id="shareArea" style="display:none">
-			<h3>Share results</h3>
-			<p>Test ID: <span id="testId"></span></p>
-			<input type="text" value="" id="resultsURL" readonly="readonly" onclick="this.select();this.focus();this.select();document.execCommand('copy');alert('Link copied')"/>
-			<img src="" id="resultsImg" />
-		</div>
-	</div>
-	<a href="https://github.com/librespeed/speedtest">Source code</a>
-</div>
-<div id="privacyPolicy" style="display:none">
-    <h2>Privacy Policy</h2>
-    <p>This HTML5 Speedtest server is configured with telemetry enabled.</p>
-    <h4>What data we collect</h4>
-    <p>
-        At the end of the test, the following data is collected and stored:
-        <ul>
-            <li>Test ID</li>
-            <li>Time of testing</li>
-            <li>Test results (download and upload speed, ping and jitter)</li>
-            <li>IP address</li>
-            <li>ISP information</li>
-            <li>Approximate location (inferred from IP address, not GPS)</li>
-            <li>User agent and browser locale</li>
-            <li>Test log (contains no personal information)</li>
-        </ul>
-    </p>
-    <h4>How we use the data</h4>
-    <p>
-        Data collected through this service is used to:
-        <ul>
-            <li>Allow sharing of test results (sharable image for forums, etc.)</li>
-            <li>To improve the service offered to you (for instance, to detect problems on our side)</li>
-        </ul>
-        No personal information is disclosed to third parties.
-    </p>
-    <h4>Your consent</h4>
-    <p>
-        By starting the test, you consent to the terms of this privacy policy.
-    </p>
-    <h4>Data removal</h4>
-    <p>
-        If you want to have your information deleted, you need to provide either the ID of the test or your IP address. This is the only way to identify your data, without this information we won't be able to comply with your request.<br/><br/>
-        Contact this email address for all deletion requests: <a href="mailto:PUT@YOUR_EMAIL.HERE">TO BE FILLED BY DEVELOPER</a>.
-    </p>
-    <br/><br/>
-    <div class="closePrivacyPolicy">
-        <a class="privacy" href="#" onclick="I('privacyPolicy').style.display='none'">Close</a>
+    <div class="container" id="testWrapper">
+        <header>
+            <h1>Flow Access</h1>
+            <p style="color: var(--text-muted); margin-top: 5px;">Тест скорости соединения</p>
+        </header>
+
+        <main class="glass-card">
+            <div class="main-controls">
+                <button id="startStopBtn" onclick="startStop()">Старт</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">Загрузка</div>
+                    <div class="stat-value" id="dlText" style="color: var(--dl-color)">0.00</div>
+                    <div class="stat-unit">Mbps</div>
+                    <div class="progress-container" id="dlProgCont"><div class="progress-bar" id="dlBar"></div></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Отдача</div>
+                    <div class="stat-value" id="ulText" style="color: var(--ul-color)">0.00</div>
+                    <div class="stat-unit">Mbps</div>
+                    <div class="progress-container" id="ulProgCont"><div class="progress-bar" id="ulBar"></div></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Пинг</div>
+                    <div class="stat-value" id="pingText" style="color: #fca311">0</div>
+                    <div class="stat-unit">ms</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Джиттер</div>
+                    <div class="stat-value" id="jitText" style="color: #fca311">0</div>
+                    <div class="stat-unit">ms</div>
+                </div>
+            </div>
+
+            <div class="info-bar">
+                <span>Ваш IP: <span id="ip">Определение...</span></span>
+                <a href="#" onclick="togglePrivacy()" style="color: inherit; text-decoration: none;">Приватность</a>
+            </div>
+
+            <div id="shareArea" style="display:none">
+                <h3 style="margin-bottom: 10px;">Результаты теста</h3>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Test ID: <span id="testId"></span></p>
+                <input type="text" id="resultsURL" readonly onclick="copyResults()">
+                <button onclick="copyResults()" style="background: var(--primary); border: none; color: white; padding: 12px 24px; border-radius: 12px; cursor: pointer; margin-top: 15px; font-weight: 600; width: 100%; transition: transform 0.2s;">
+                    Поделиться результатом
+                </button>
+            </div>
+        </main>
+        
+        <div id="toast" class="toast">Ссылка скопирована!</div>
+
+        <!-- Footer removed -->
     </div>
-    <br/>
-</div>
-<script type="text/javascript">setTimeout(function(){initUI()},100);</script>
+
+    <!-- Модалка приватности -->
+    <div id="privacyPolicy" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div class="glass-card" style="max-width: 600px; padding: 30px;">
+            <h2 style="margin-bottom: 20px;">Политика конфиденциальности</h2>
+            <div style="font-size: 0.9rem; color: var(--text-muted); max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                <p>Этот сервер настроен с включенной телеметрией.</p>
+                <p><b>Собираемые данные:</b> ID теста, время, скорость загрузки/отдачи, пинг, джиттер, IP-адрес, информация о провайдере и примерное местоположение.</p>
+                <p>Данные используются для улучшения сервиса и возможности делиться результатами.</p>
+            </div>
+            <button onclick="togglePrivacy()" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--primary); color: white; cursor: pointer;">Закрыть</button>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function I(i){return document.getElementById(i);}
+        
+        var s = new Speedtest();
+        s.setParameter("telemetry_level", "basic");
+
+        function format(d) {
+            d = Number(d);
+            if (d < 10) return d.toFixed(2);
+            if (d < 100) return d.toFixed(1);
+            return d.toFixed(0);
+        }
+
+        var uiData = null;
+        function startStop() {
+            if (s.getState() == 3) {
+                s.abort();
+                I("startStopBtn").className = "";
+                I("startStopBtn").innerText = "Старт";
+                I("dlProgCont").style.display = "none";
+                I("ulProgCont").style.display = "none";
+            } else {
+                I("startStopBtn").className = "running";
+                I("startStopBtn").innerText = "Стоп";
+                I("shareArea").style.display = "none";
+                s.onupdate = function(data) {
+                    uiData = data;
+                    updateUI();
+                };
+                s.onend = function(aborted) {
+                    I("startStopBtn").className = "";
+                    I("startStopBtn").innerText = "Старт";
+                    I("dlProgCont").style.display = "none";
+                    I("ulProgCont").style.display = "none";
+                    if (!aborted && uiData && uiData.testId) {
+                        var shareURL = window.location.href.substring(0, window.location.href.lastIndexOf("/")) + "/results/?id=" + uiData.testId;
+                        I("resultsURL").value = shareURL;
+                        I("testId").innerText = uiData.testId;
+                        I("shareArea").style.display = "block";
+                    }
+                };
+                s.start();
+            }
+        }
+
+        function updateUI() {
+            if (!uiData) return;
+            I("ip").innerText = uiData.clientIp;
+            I("dlText").innerText = format(uiData.dlStatus);
+            I("ulText").innerText = format(uiData.ulStatus);
+            I("pingText").innerText = format(uiData.pingStatus);
+            I("jitText").innerText = format(uiData.jitterStatus);
+
+            // Progress bars
+            if (uiData.testState == 1) { // Downloading
+                I("dlProgCont").style.display = "block";
+                I("dlBar").style.width = (uiData.dlProgress * 100) + "%";
+            } else if (uiData.testState == 3) { // Uploading
+                I("dlProgCont").style.display = "none";
+                I("ulProgCont").style.display = "block";
+                I("ulBar").style.width = (uiData.ulProgress * 100) + "%";
+            }
+        }
+
+        function togglePrivacy() {
+            var el = I("privacyPolicy");
+            el.style.display = el.style.display === "none" ? "flex" : "none";
+        }
+
+        function copyResults() {
+            I("resultsURL").select();
+            document.execCommand('copy');
+            showToast("Ссылка скопирована!");
+        }
+
+        function showToast(msg) {
+            var t = I("toast");
+            t.innerText = msg;
+            t.className = "toast show";
+            setTimeout(function(){ t.className = "toast"; }, 2500);
+        }
+
+        // Init
+        I("privacyPolicy").style.display = "none";
+    </script>
 </body>
 </html>
